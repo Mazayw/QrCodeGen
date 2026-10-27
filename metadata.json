@@ -1,0 +1,6 @@
+{
+  "name": "QR Studio - Custom Vector QR Code Generator",
+  "description": "Create customizable, high-resolution QR codes with tracking parameter cleaner, shapes, colors, icons, and vector SVG/PDF export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

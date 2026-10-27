@@ -169,6 +169,26 @@ export function runTrackingCleanerTests(): {
     });
   }
 
+  // Test 10: TikTok tracking parameters removal (_r + _t) preserving username handle
+  {
+    const input =
+      'https://www.tiktok.com/@__crystal_el__?_r=1&_t=ZS-9AuGSOU1rl7';
+    const res = cleanTrackingParams(input);
+    const expected = 'https://www.tiktok.com/@__crystal_el__';
+    const passed =
+      res.cleanedUrl === expected &&
+      res.removedParams.includes('_r') &&
+      res.removedParams.includes('_t') &&
+      !res.cleanedUrl.includes('?');
+    results.push({
+      name: 'TikTok tracking removal (_r + _t) preserving @__crystal_el__',
+      passed,
+      expected,
+      actual: res.cleanedUrl,
+      details: `Removed: ${res.removedParams.join(', ')}`,
+    });
+  }
+
   const allPassed = results.every((r) => r.passed);
   return { allPassed, results };
 }

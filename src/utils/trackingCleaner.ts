@@ -46,6 +46,15 @@ export const DEFAULT_TRACKING_CONFIG: TrackingRuleConfig = {
       },
       keys: ['igsh', 'igshid', 'srtk'],
     },
+    {
+      // Match tiktok.com and any legitimate subdomain (www.tiktok.com, m.tiktok.com, vm.tiktok.com, etc.)
+      // Excludes spoofed domains like tiktok.com.example.org
+      domainMatches: (hostname: string) => {
+        const lower = hostname.toLowerCase();
+        return lower === 'tiktok.com' || lower.endsWith('.tiktok.com');
+      },
+      keys: ['_r', '_t'],
+    },
   ],
 
   // Parameters that indicate a cryptographically signed URL

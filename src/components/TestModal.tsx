@@ -64,7 +64,7 @@ export const TestModal: React.FC<TestModalProps> = ({ isOpen, onClose }) => {
                   allPassed ? 'text-emerald-700' : 'text-rose-700'
                 }`}
               >
-                {allPassed ? 'All 9 Tests Passed' : 'Failures Detected'}
+                {allPassed ? `All ${testResults.length} Tests Passed` : 'Failures Detected'}
               </span>
             </div>
             <button

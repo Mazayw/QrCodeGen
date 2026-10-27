@@ -205,11 +205,23 @@ export default function App() {
               onUploadLogo={setUploadedLogoDataUrl}
               urlValue={urlValue}
             />
+
+            <ExportSection
+              encodedData={encodedContent}
+              styleConfig={styleConfig}
+              centerImageUrl={centerImageUrl}
+              exportConfig={exportConfig}
+              onChangeExportConfig={handleUpdateExport}
+              isRendering={isRendering}
+              autoSuggestedFileName={autoSuggestedFileName}
+              isCustomFileName={isCustomFileName}
+              onResetToAutoFileName={handleResetToAutoFileName}
+            />
           </div>
 
-          {/* Right Column: Sticky Live Preview + Export Section that stays visible & descends on scroll */}
+          {/* Right Column: Sticky Live Preview that stays visible & descends on scroll */}
           <div className="lg:col-span-5 xl:col-span-5">
-            <div className="lg:sticky lg:top-20 space-y-6 max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto pr-0.5">
+            <div className="lg:sticky lg:top-20">
               <PreviewPanel
                 encodedData={encodedContent}
                 styleConfig={styleConfig}
@@ -218,18 +230,6 @@ export default function App() {
                 setIsRendering={setIsRendering}
                 renderError={renderError}
                 setRenderError={setRenderError}
-              />
-
-              <ExportSection
-                encodedData={encodedContent}
-                styleConfig={styleConfig}
-                centerImageUrl={centerImageUrl}
-                exportConfig={exportConfig}
-                onChangeExportConfig={handleUpdateExport}
-                isRendering={isRendering}
-                autoSuggestedFileName={autoSuggestedFileName}
-                isCustomFileName={isCustomFileName}
-                onResetToAutoFileName={handleResetToAutoFileName}
               />
             </div>
           </div>

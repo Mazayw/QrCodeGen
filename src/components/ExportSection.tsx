@@ -6,6 +6,8 @@ import {
   Image as ImageIcon,
   Loader2,
   Check,
+  Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import { ExportConfig, StyleConfig } from '../types/qr.ts';
 import { downloadPng, downloadSvg, downloadPdf } from '../utils/qrExport.ts';
@@ -17,6 +19,9 @@ interface ExportSectionProps {
   exportConfig: ExportConfig;
   onChangeExportConfig: (patch: Partial<ExportConfig>) => void;
   isRendering: boolean;
+  autoSuggestedFileName: string;
+  isCustomFileName: boolean;
+  onResetToAutoFileName: () => void;
 }
 
 export const ExportSection: React.FC<ExportSectionProps> = ({
@@ -26,6 +31,9 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
   exportConfig,
   onChangeExportConfig,
   isRendering,
+  autoSuggestedFileName,
+  isCustomFileName,
+  onResetToAutoFileName,
 }) => {
   const [downloadingType, setDownloadingType] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -103,7 +111,7 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
   };
 
   return (
-    <section className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6 shadow-xs space-y-6">
+    <section className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6 shadow-xs space-y-5">
       <div>
         <h2 className="text-base font-semibold text-neutral-900">5. Export</h2>
         <p className="text-xs text-neutral-500">
@@ -111,14 +119,35 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
         </p>
       </div>
 
-      {/* File Name */}
+      {/* File Name with intelligent auto-sync from content */}
       <div>
-        <label
-          htmlFor="file-name"
-          className="block text-xs font-medium text-neutral-700 mb-1.5"
-        >
-          File Name
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label
+            htmlFor="file-name"
+            className="block text-xs font-medium text-neutral-700"
+          >
+            File Name
+          </label>
+          <div className="flex items-center gap-1.5">
+            {!isCustomFileName ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-neutral-500">
+                <Sparkles className="w-3 h-3 text-neutral-600" />
+                <span>Auto-derived from content</span>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onResetToAutoFileName}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+                title="Reset filename to match the current URL/content"
+              >
+                <RotateCcw className="w-3 h-3 text-neutral-500" />
+                <span>Reset to content name</span>
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center gap-2">
           <input
             id="file-name"
@@ -127,14 +156,14 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
             onChange={(e) =>
               onChangeExportConfig({ fileName: e.target.value })
             }
-            placeholder="qr-code"
-            className="w-full max-w-sm px-3.5 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 text-neutral-900 font-mono transition-colors"
+            placeholder={autoSuggestedFileName}
+            className="w-full px-3.5 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 text-neutral-900 font-mono transition-colors"
           />
         </div>
       </div>
 
       {/* Options Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
         {/* PNG Size Options */}
         <div>
           <span className="text-xs font-semibold text-neutral-700 block mb-1.5">
@@ -161,7 +190,7 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
         {/* PDF Physical Size Options */}
         <div>
           <span className="text-xs font-semibold text-neutral-700 block mb-1.5">
-            PDF Page Size (Physical mm)
+            PDF Page Size (mm)
           </span>
           <div className="grid grid-cols-4 gap-1.5">
             {([30, 50, 100, 'custom'] as const).map((sz) => (
@@ -202,18 +231,18 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
       </div>
 
       {/* Download Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-neutral-100">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 border-t border-neutral-100">
         {/* PNG */}
         <button
           type="button"
           onClick={handleDownloadPng}
           disabled={isExportDisabled || downloadingType !== null}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs cursor-pointer"
+          className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-xl bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs cursor-pointer"
         >
           {downloadingType === 'png' ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <ImageIcon className="w-4 h-4" />
+            <ImageIcon className="w-3.5 h-3.5" />
           )}
           <span>Download PNG</span>
         </button>
@@ -223,13 +252,13 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
           type="button"
           onClick={handleDownloadSvg}
           disabled={isExportDisabled || downloadingType !== null}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 hover:text-neutral-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+          className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 hover:text-neutral-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
           title="Pure vector SVG file without internet dependencies"
         >
           {downloadingType === 'svg' ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <FileCode className="w-4 h-4 text-neutral-600" />
+            <FileCode className="w-3.5 h-3.5 text-neutral-600" />
           )}
           <span>Download SVG</span>
         </button>
@@ -239,13 +268,13 @@ export const ExportSection: React.FC<ExportSectionProps> = ({
           type="button"
           onClick={handleDownloadPdf}
           disabled={isExportDisabled || downloadingType !== null}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 hover:text-neutral-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+          className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-xl bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 hover:text-neutral-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
           title="Vector PDF generated with svg2pdf and jsPDF"
         >
           {downloadingType === 'pdf' ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <FileText className="w-4 h-4 text-neutral-600" />
+            <FileText className="w-3.5 h-3.5 text-neutral-600" />
           )}
           <span>Download PDF</span>
         </button>

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { QrCode, ArrowDown } from 'lucide-react';
 import { Navbar } from './components/Navbar.tsx';
 import { ContentSection } from './components/ContentSection.tsx';
 import { PresetsBar, PRESETS } from './components/PresetsBar.tsx';
@@ -28,6 +29,7 @@ import {
   DEFAULT_STYLE_CONFIG,
 } from './utils/storage.ts';
 import { ICON_LIBRARY, getIconSvgDataUrl } from './data/icons.ts';
+import { generateSuggestedFilename } from './utils/filenameHelper.ts';
 
 export default function App() {
   // Content state (never stored automatically in localStorage per privacy requirements)
@@ -47,6 +49,9 @@ export default function App() {
     loadSavedExportConfig()
   );
 
+  // Track if user has manually typed a custom filename
+  const [isCustomFileName, setIsCustomFileName] = useState<boolean>(false);
+
   // Uploaded user image (session only, never stored in localStorage)
   const [uploadedLogoDataUrl, setUploadedLogoDataUrl] = useState<string | null>(
     null
@@ -56,6 +61,26 @@ export default function App() {
   const [isRendering, setIsRendering] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+
+  // Determine current active encoded content
+  const encodedContent = useMemo(() => {
+    return contentType === 'url' ? urlValue.trim() : textValue.trim();
+  }, [contentType, urlValue, textValue]);
+
+  // Compute suggested filename based on current encoded link/text
+  const autoSuggestedFileName = useMemo(() => {
+    return generateSuggestedFilename(contentType, encodedContent);
+  }, [contentType, encodedContent]);
+
+  // Automatically sync filename if user hasn't explicitly customized it
+  useEffect(() => {
+    if (!isCustomFileName) {
+      setExportConfig((prev) => ({
+        ...prev,
+        fileName: autoSuggestedFileName,
+      }));
+    }
+  }, [autoSuggestedFileName, isCustomFileName]);
 
   // Persist style on changes
   useEffect(() => {
@@ -72,7 +97,18 @@ export default function App() {
   };
 
   const handleUpdateExport = (patch: Partial<ExportConfig>) => {
+    if (patch.fileName !== undefined && patch.fileName !== autoSuggestedFileName) {
+      setIsCustomFileName(true);
+    }
     setExportConfig((prev) => ({ ...prev, ...patch }));
+  };
+
+  const handleResetToAutoFileName = () => {
+    setIsCustomFileName(false);
+    setExportConfig((prev) => ({
+      ...prev,
+      fileName: autoSuggestedFileName,
+    }));
   };
 
   const handleApplyPreset = (presetName: PresetName) => {
@@ -90,12 +126,8 @@ export default function App() {
   const handleClearContent = () => {
     setUrlValue('');
     setTextValue('');
+    setIsCustomFileName(false);
   };
-
-  // Determine current active encoded content
-  const encodedContent = useMemo(() => {
-    return contentType === 'url' ? urlValue.trim() : textValue.trim();
-  }, [contentType, urlValue, textValue]);
 
   // Compute center image (uploaded raster or library vector SVG Data URL)
   const centerImageUrl = useMemo(() => {
@@ -120,6 +152,13 @@ export default function App() {
 
   const hasLogo = styleConfig.logoMode !== 'none' && !!centerImageUrl;
 
+  const scrollToPreview = () => {
+    document.getElementById('preview-section')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50/70 text-neutral-900 flex flex-col font-sans">
       <Navbar
@@ -129,9 +168,10 @@ export default function App() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 md:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Configuration Controls (Content, Presets, Style, Colors, Logo, Export) */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+        {/* Responsive Two-Column Layout (without items-start so right column stretches full height) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Configuration Controls (Content, Presets, Style, Colors, Logo) */}
+          <div className="lg:col-span-7 xl:col-span-7 space-y-6">
             <ContentSection
               contentType={contentType}
               setContentType={setContentType}
@@ -165,31 +205,49 @@ export default function App() {
               onUploadLogo={setUploadedLogoDataUrl}
               urlValue={urlValue}
             />
-
-            <ExportSection
-              encodedData={encodedContent}
-              styleConfig={styleConfig}
-              centerImageUrl={centerImageUrl}
-              exportConfig={exportConfig}
-              onChangeExportConfig={handleUpdateExport}
-              isRendering={isRendering}
-            />
           </div>
 
-          {/* Right Column: Sticky Live Preview */}
-          <div className="lg:col-span-5 xl:col-span-4">
-            <PreviewPanel
-              encodedData={encodedContent}
-              styleConfig={styleConfig}
-              centerImageUrl={centerImageUrl}
-              isRendering={isRendering}
-              setIsRendering={setIsRendering}
-              renderError={renderError}
-              setRenderError={setRenderError}
-            />
+          {/* Right Column: Sticky Live Preview + Export Section that stays visible & descends on scroll */}
+          <div className="lg:col-span-5 xl:col-span-5">
+            <div className="lg:sticky lg:top-20 space-y-6 max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto pr-0.5">
+              <PreviewPanel
+                encodedData={encodedContent}
+                styleConfig={styleConfig}
+                centerImageUrl={centerImageUrl}
+                isRendering={isRendering}
+                setIsRendering={setIsRendering}
+                renderError={renderError}
+                setRenderError={setRenderError}
+              />
+
+              <ExportSection
+                encodedData={encodedContent}
+                styleConfig={styleConfig}
+                centerImageUrl={centerImageUrl}
+                exportConfig={exportConfig}
+                onChangeExportConfig={handleUpdateExport}
+                isRendering={isRendering}
+                autoSuggestedFileName={autoSuggestedFileName}
+                isCustomFileName={isCustomFileName}
+                onResetToAutoFileName={handleResetToAutoFileName}
+              />
+            </div>
           </div>
         </div>
       </main>
+
+      {/* Floating Preview Pill for Mobile Devices */}
+      <div className="lg:hidden fixed bottom-4 right-4 z-40">
+        <button
+          type="button"
+          onClick={scrollToPreview}
+          className="flex items-center gap-2 bg-neutral-900 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-neutral-800 transition-all border border-neutral-700 active:scale-95 text-xs font-semibold"
+        >
+          <QrCode className="w-4 h-4 text-white" />
+          <span>Live Preview</span>
+          <ArrowDown className="w-3.5 h-3.5 text-neutral-300" />
+        </button>
+      </div>
 
       {/* Footer */}
       <footer className="border-t border-neutral-200 bg-white py-6 mt-12 text-center text-xs text-neutral-500">

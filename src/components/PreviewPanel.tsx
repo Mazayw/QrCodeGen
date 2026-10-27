@@ -63,7 +63,10 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   }, [encodedData, styleConfig, centerImageUrl, setIsRendering, setRenderError]);
 
   return (
-    <div className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6 shadow-xs sticky top-20 flex flex-col items-center">
+    <div
+      id="preview-section"
+      className="bg-white rounded-2xl border border-neutral-200 p-5 md:p-6 shadow-xs flex flex-col items-center"
+    >
       <div className="w-full flex items-center justify-between pb-3 mb-4 border-b border-neutral-100">
         <h2 className="text-sm font-semibold text-neutral-900">Live Preview</h2>
         {isRendering ? (
